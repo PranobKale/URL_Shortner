@@ -23,8 +23,8 @@ Follow these steps to set up and run the URL Shortener project.
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/url-shortener.git
-cd url-shortener
+git clone https://github.com/PranobKale/URL_Shortner.git
+cd url_shortner
 
 ---
 
