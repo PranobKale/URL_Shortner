@@ -8,5 +8,5 @@ class URL(models.Model):
 
 class AccessLog(models.Model):
     shortened_url = models.ForeignKey(URL, on_delete=models.CASCADE, related_name='access_logs')
-    access_timestamp = models.DateTimeField(auto_now_add=True)
+    access_timestamp = models.DateTimeField()
     ip_address = models.GenericIPAddressField()

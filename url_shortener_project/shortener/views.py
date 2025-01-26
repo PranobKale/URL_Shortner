@@ -10,6 +10,8 @@ def index(request):
     return render(request, 'shortener/index.html')
     # return HttpResponse("<h1> Hello $$$$ </h1>")
 
+full_shortened_url = ''
+
 def shorten_url(request):
     """
     Shortens a given URL and stores it in the database with an expiration timestamp.
@@ -30,6 +32,7 @@ def shorten_url(request):
     try:
         # Check if the request method is POST
         if request.method == 'POST':
+            global full_shortened_url
             # Extract the original URL and expiry time from the request
             original_url = request.POST.get('url')
             expiry_hours = int(request.POST.get('expiry', 24))  # Default expiry is 24 hours if not provided
@@ -51,9 +54,11 @@ def shorten_url(request):
                 }
             )
 
-            # Prepare data for rendering the response
+            # Dynamically generate the full shortened URL using request.build_absolute_uri
+            full_shortened_url = request.build_absolute_uri(f'/{url.shortened_url}/')
+
             data = {
-                'shortened_url': f'https://short.ly/{url.shortened_url}',  # Full shortened URL
+                'shortened_url': full_shortened_url,  # Full shortened URL
                 'shortened_url_code': url.shortened_url  # Shortened URL code for internal usage
             }
 
@@ -93,9 +98,13 @@ def redirect_to_original(request, short_url):
         if url.expiration_timestamp < now():
             return HttpResponse("The URL has expired.", status=410)
 
-        # Log the access for analytics
-        AccessLog.objects.create(shortened_url=url, ip_address=request.META.get('REMOTE_ADDR'))
-
+        # Log the access for analytics, including the timestamp, IP address, and shortened URL
+        access_timestamp = datetime.datetime.now()  # Get the current timestamp
+        AccessLog.objects.create(
+            shortened_url=url,
+            ip_address=request.META.get('REMOTE_ADDR'),
+            access_timestamp=access_timestamp 
+        )
         # Redirect to the original URL
         return redirect(url.original_url)
     except Exception as e:
@@ -122,10 +131,10 @@ def analytics(request, short_url):
 
         # Fetch access logs for the shortened URL
         logs = url.access_logs.all()
-
+    
         # Prepare data for rendering
         data = {
-            'short_url': f'https://short.ly/{short_url}',  # Full shortened URL
+            'short_url': f'{full_shortened_url}',  # Full shortened URL
             'access_count': logs.count(),  # Total number of accesses
             'expiration_timestamp': url.expiration_timestamp,  # Expiry date and time
             'original_url': url.original_url,  # Original URL
