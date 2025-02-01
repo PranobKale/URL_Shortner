@@ -35,7 +35,11 @@ def shorten_url(request):
             global full_shortened_url
             # Extract the original URL and expiry time from the request
             original_url = request.POST.get('url')
-            expiry_hours = int(request.POST.get('expiry', 24))  # Default expiry is 24 hours if not provided
+            expiry_hours = request.POST.get('expiry', 24)  # Default expiry is 24 hours if not provided
+            if isinstance(expiry_hours,str):
+                expiry_hours = 24
+            else:
+                expiry_hours = int(expiry_hours)
             
             # Validate the input URL
             if not original_url:
